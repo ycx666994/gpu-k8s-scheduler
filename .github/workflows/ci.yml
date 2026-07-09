@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate project files
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check JavaScript syntax
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Validate web scripts
+        run: |
+          node --check web/app.js
+
+      - name: Validate exported JSON
+        run: |
+          python -m json.tool web/data/cluster-status.json > /tmp/cluster-status.json
+
+      - name: Validate Kubernetes YAML syntax
+        run: |
+          ruby -e 'require "yaml"; Dir["k8s/*.yaml"].sort.each { |file| YAML.load_stream(File.read(file)); puts "ok #{file}" }'
+
+      - name: Validate PowerShell scripts
+        shell: pwsh
+        run: |
+          $files = Get-ChildItem scripts -Filter *.ps1
+          foreach ($file in $files) {
+            $tokens = $null
+            $errors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($file.FullName, [ref]$tokens, [ref]$errors) | Out-Null
+            if ($errors.Count -gt 0) {
+              $errors | Format-List
+              throw "PowerShell parse failed: $($file.FullName)"
+            }
+            Write-Host "ok $($file.FullName)"
+          }
+
