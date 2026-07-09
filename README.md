@@ -1,6 +1,8 @@
-# GPU Resource Scheduling and Cost Optimization
+# GPU K8s Scheduler
 
-This project demonstrates GPU resource isolation, utilization monitoring, and scheduling strategy comparison on Kubernetes.
+Kubernetes GPU scheduling and cost optimization MVP. This project demonstrates GPU resource isolation, quota enforcement, node-affinity scheduling, priority classes, admission rejection, and a local dashboard backed by exported cluster state.
+
+中文简介：基于 Kubernetes 的 GPU 资源调度与成本优化系统，通过 Namespace 资源隔离、ResourceQuota 配额管理、Node Affinity 节点亲和性及 PriorityClass 优先级调度，展示 GPU 资源隔离、调度策略对比与成本可视化。
 
 ## Scope
 
@@ -8,7 +10,7 @@ This project demonstrates GPU resource isolation, utilization monitoring, and sc
 - ResourceQuota and LimitRange for GPU, CPU, and memory budgets.
 - Node affinity and taints/tolerations for GPU node placement.
 - PriorityClass for preemption and workload importance.
-- Utilization and cost dashboard using mock metrics first, then Prometheus/DCGM metrics later.
+- Utilization and cost dashboard using exported Kubernetes state first, then Prometheus/DCGM metrics later.
 - Strategy comparison: baseline scheduling, quota isolation, node affinity, and priority-based scheduling.
 
 ## Repository Layout
@@ -22,7 +24,7 @@ docs/
 k8s/
   00-namespaces.yaml             Team namespaces
   10-quotas-limits.yaml          ResourceQuota and LimitRange objects
-  namespaces-quotas.yaml         Namespace, quota, and limit examples
+  namespaces-quotas.yaml         Deprecated combined namespace/quota note
   priorityclasses.yaml           PriorityClass examples
   gpu-node-affinity-demo.yaml     Demo workloads using affinity and priority
   gpu-node-affinity-kind-demo.yaml Low CPU/memory GPU request demo for kind
@@ -39,23 +41,7 @@ scripts/
   cleanup.ps1                    Remove demo Kubernetes objects
 ```
 
-## Day 1 Goal
-
-Build a clear MVP story:
-
-1. Three teams share GPU resources: research, training, and inference.
-2. Quotas isolate each team's GPU budget.
-3. Node affinity sends workloads to matching GPU node pools.
-4. PriorityClass lets production inference win during contention.
-5. A dashboard compares utilization and estimated cost across strategies.
-
 ## Run the Dashboard
-
-Open this file in a browser:
-
-```text
-web/index.html
-```
 
 No install step is required. To show live cluster data, export the current Kubernetes state first:
 
@@ -70,9 +56,15 @@ web/data/cluster-status.json
 web/data/cluster-status.js
 ```
 
+Then open this file in a browser:
+
+```text
+web/index.html
+```
+
 ## Apply the Kubernetes Manifests
 
-Use these only when you have a Kubernetes cluster with GPU nodes or a simulated GPU resource.
+Use these on a Kubernetes cluster. A local kind cluster is enough for the scheduling and quota experiments, even without real GPU resources.
 
 ```powershell
 kubectl apply -f k8s/00-namespaces.yaml
@@ -81,7 +73,7 @@ kubectl apply -f k8s/10-quotas-limits.yaml
 kubectl apply -f k8s/gpu-node-affinity-demo.yaml
 ```
 
-For a local kind cluster without real GPU resources, use this lower-resource demo to isolate the GPU scheduling failure reason:
+For a local kind cluster without real GPU resources, use these lower-resource demos to isolate GPU scheduling failure reasons:
 
 ```powershell
 kubectl apply -f k8s/gpu-node-affinity-kind-demo.yaml
@@ -129,8 +121,18 @@ Check the admission rejection event:
 kubectl get events -n ai-inference --field-selector reason=FailedCreate --sort-by=.lastTimestamp
 ```
 
+## Report and Screenshots
+
+- Project report: `docs/project-report.md`
+- Dashboard screenshot: `docs/screenshots/dashboard.png`
+- Evidence screenshot: `docs/screenshots/evidence.png`
+
 ## Cleanup
 
 ```powershell
 .\scripts\cleanup.ps1
 ```
+
+## License
+
+MIT
