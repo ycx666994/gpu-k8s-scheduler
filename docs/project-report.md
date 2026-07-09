@@ -1,4 +1,4 @@
-# GPU 资源调度与成本优化系统项目报告
+﻿# GPU 资源调度与成本优化系统项目报告
 
 ## 1. 项目概述
 
@@ -56,6 +56,15 @@ gpu-scheduler-cost-optimizer/
     screenshots/
 ```
 
+## System Architecture
+
+![Architecture](./screenshots/architecture.png)
+
+The system has three layers:
+
+- Control plane: Kubernetes manifests define Namespace, ResourceQuota, LimitRange, PriorityClass, and Node Affinity policies.
+- Cluster execution: admission and scheduling produce observable `FailedCreate` and `FailedScheduling` events.
+- Observability: `export-cluster-status.ps1` exports live `kubectl` state into the local dashboard.
 ## 5. 核心设计
 
 ### 5.1 Namespace 隔离
@@ -212,4 +221,5 @@ web/index.html
 ## 10. 结论
 
 本项目已经完成一个可复现、可展示的 GPU 资源调度与成本优化 MVP。它通过 Kubernetes 原生对象证明了 GPU 资源隔离、调度约束、优先级策略和配额拒绝的核心机制，并提供了本地仪表盘用于展示真实导出的集群状态。后续接入真实 GPU 节点和 Prometheus/DCGM 后，可以进一步升级为完整的 GPU 利用率监控与成本优化系统。
+
 

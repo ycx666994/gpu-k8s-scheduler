@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GPU Scheduler Architecture</title>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --ink: #17202a;
+        --muted: #657286;
+        --line: #d9dee7;
+        --blue: #2f6fbd;
+        --green: #16856a;
+        --amber: #b98219;
+        --red: #be4b49;
+      }
+      * { box-sizing: border-box; }
+      body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Segoe UI", Arial, sans-serif; }
+      main { width: 1220px; margin: 0 auto; padding: 34px 0; }
+      h1 { margin: 0 0 8px; font-size: 38px; letter-spacing: 0; }
+      .subtitle { margin: 0 0 24px; color: var(--muted); font-size: 16px; }
+      .diagram { display: grid; grid-template-columns: 1fr 1.25fr 1fr; gap: 18px; align-items: stretch; }
+      .lane { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; min-height: 660px; }
+      .lane h2 { margin: 0 0 14px; font-size: 20px; }
+      .stack, .cluster { display: grid; gap: 12px; }
+      .box { border: 1px solid var(--line); border-left: 5px solid var(--blue); border-radius: 8px; padding: 13px 14px; background: #fbfcfe; }
+      .box strong { display: block; font-size: 15px; margin-bottom: 5px; }
+      .box span { color: var(--muted); font-size: 13px; line-height: 1.35; }
+      .green { border-left-color: var(--green); }
+      .amber { border-left-color: var(--amber); }
+      .red { border-left-color: var(--red); }
+      .namespace { border: 1px solid var(--line); border-radius: 8px; padding: 14px; background: #fbfcfe; }
+      .namespace h3 { margin: 0 0 10px; font-size: 16px; }
+      .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+      .chip { border: 1px solid var(--line); border-radius: 999px; padding: 6px 10px; font-size: 12px; color: var(--muted); background: #ffffff; }
+      .arrow { text-align: center; color: var(--muted); font-size: 13px; margin: 11px 0; }
+      .footer { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-top: 18px; }
+      .metric { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px; }
+      .metric span { color: var(--muted); font-size: 13px; }
+      .metric strong { display: block; margin-top: 6px; font-size: 22px; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>GPU Resource Scheduling Architecture</h1>
+      <p class="subtitle">Kubernetes policy objects, scheduling events, exported state, and local dashboard visualization.</p>
+      <section class="diagram">
+        <div class="lane">
+          <h2>Control Plane</h2>
+          <div class="stack">
+            <div class="box"><strong>Platform Engineer</strong><span>Applies manifests and labels simulated GPU node pools.</span></div>
+            <div class="arrow">kubectl apply / label</div>
+            <div class="box green"><strong>Namespace</strong><span>ai-research, ai-training, and ai-inference isolate teams.</span></div>
+            <div class="box green"><strong>ResourceQuota + LimitRange</strong><span>GPU, CPU, memory, and pod budgets are enforced per namespace.</span></div>
+            <div class="box amber"><strong>PriorityClass</strong><span>Critical inference outranks training and low-priority batch jobs.</span></div>
+            <div class="box amber"><strong>Node Affinity</strong><span>Training and inference workloads target different GPU pools.</span></div>
+          </div>
+        </div>
+        <div class="lane">
+          <h2>Kubernetes Cluster</h2>
+          <div class="cluster">
+            <div class="namespace"><h3>ai-research</h3><div class="chips"><span class="chip">GPU quota 0/2</span><span class="chip">experiments</span><span class="chip">team isolation</span></div></div>
+            <div class="namespace"><h3>ai-training</h3><div class="chips"><span class="chip">GPU quota 2/6</span><span class="chip">gpu-training</span><span class="chip">pool=training</span><span class="chip">Pending when no GPU</span></div></div>
+            <div class="namespace"><h3>ai-inference</h3><div class="chips"><span class="chip">GPU quota 3/4</span><span class="chip">gpu-critical-inference</span><span class="chip">pool=inference</span><span class="chip">FailedCreate on quota exceed</span></div></div>
+            <div class="arrow">admission + scheduler</div>
+            <div class="box red"><strong>Observed Control Points</strong><span>FailedScheduling shows placement/resource shortage. FailedCreate shows quota admission rejection.</span></div>
+            <div class="box"><strong>Future Metrics Layer</strong><span>Prometheus, kube-state-metrics, NVIDIA device plugin, and DCGM Exporter provide real utilization.</span></div>
+          </div>
+        </div>
+        <div class="lane">
+          <h2>Observability</h2>
+          <div class="stack">
+            <div class="box"><strong>kubectl State Exporter</strong><span>scripts/export-cluster-status.ps1 collects namespaces, quotas, pods, nodes, and events.</span></div>
+            <div class="arrow">writes static data</div>
+            <div class="box green"><strong>cluster-status.json</strong><span>Machine-readable cluster state for reports and debugging.</span></div>
+            <div class="box green"><strong>cluster-status.js</strong><span>Browser-friendly data source for local dashboard rendering.</span></div>
+            <div class="arrow">renders</div>
+            <div class="box amber"><strong>Local Dashboard</strong><span>Shows GPU requested/quota, Pending Pods, admission failures, namespace usage, and estimated idle cost.</span></div>
+            <div class="box"><strong>Project Report</strong><span>docs/project-report.md summarizes design, experiments, screenshots, and next steps.</span></div>
+          </div>
+        </div>
+      </section>
+      <section class="footer">
+        <div class="metric"><span>GPU Requested / Quota</span><strong>5 / 12</strong></div>
+        <div class="metric"><span>Pending Pods</span><strong>5</strong></div>
+        <div class="metric"><span>Admission Rejection</span><strong>Quota Exceeded</strong></div>
+        <div class="metric"><span>Real GPU Metrics</span><strong>Prometheus + DCGM</strong></div>
+      </section>
+    </main>
+  </body>
+</html>
+

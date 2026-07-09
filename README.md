@@ -17,6 +17,7 @@ Kubernetes GPU scheduling and cost optimization MVP. This project demonstrates G
 
 ```text
 docs/
+  architecture.md                System architecture diagram and flow
   day1.md                       Day 1 build checklist and learning notes
   day2.md                       First kind cluster deployment notes
   prometheus-queries.md          Prometheus query plan for real metrics
@@ -40,6 +41,16 @@ scripts/
   export-cluster-status.ps1      Export kubectl state into the web dashboard
   cleanup.ps1                    Remove demo Kubernetes objects
 ```
+
+## Architecture
+
+![Architecture](docs/screenshots/architecture.png)
+
+The project has three layers:
+
+- Control plane: Kubernetes manifests define Namespace, ResourceQuota, LimitRange, PriorityClass, and Node Affinity policies.
+- Cluster execution: admission and scheduling produce observable `FailedCreate` and `FailedScheduling` events.
+- Observability: `export-cluster-status.ps1` exports live `kubectl` state into the local dashboard.
 
 ## Run the Dashboard
 
