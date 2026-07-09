@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GPU Resource Scheduling and Cost Optimization</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Kubernetes GPU Platform</p>
+          <h1>GPU Resource Scheduling and Cost Optimization</h1>
+        </div>
+        <div class="status">
+          <span class="dot"></span>
+          <span id="dataSource">Mock Metrics</span>
+        </div>
+      </header>
+
+      <section class="controls" aria-label="strategy controls">
+        <button class="strategy active" data-strategy="cluster">Live Cluster</button>
+        <button class="strategy" data-strategy="baseline">Baseline</button>
+        <button class="strategy" data-strategy="quota">Namespace + Quota</button>
+        <button class="strategy" data-strategy="affinity">Node Affinity</button>
+        <button class="strategy" data-strategy="priority">PriorityClass</button>
+      </section>
+
+      <section class="metrics" aria-label="summary metrics">
+        <article>
+          <span>GPU Requested</span>
+          <strong id="utilization">0/0</strong>
+        </article>
+        <article>
+          <span>Pending Pods</span>
+          <strong id="pending">0</strong>
+        </article>
+        <article>
+          <span>Idle Cost / Hour</span>
+          <strong id="idleCost">$0.00</strong>
+        </article>
+        <article>
+          <span>Policy Score</span>
+          <strong id="score">0</strong>
+        </article>
+      </section>
+
+      <section class="layout">
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Namespace GPU Isolation</h2>
+            <span id="strategyLabel">Live Cluster</span>
+          </div>
+          <div id="teamRows" class="team-rows"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head">
+            <h2>Scheduling Events</h2>
+            <span id="eventWindow">Recent</span>
+          </div>
+          <ol id="events" class="events"></ol>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h2>Strategy Comparison</h2>
+          <span>Utilization / Cost / Fairness</span>
+        </div>
+        <div id="comparison" class="comparison"></div>
+      </section>
+    </main>
+
+    <script src="./data/cluster-status.js"></script>
+    <script src="./app.js"></script>
+  </body>
+</html>
+

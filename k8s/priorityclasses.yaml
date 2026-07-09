@@ -1,0 +1,27 @@
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: gpu-critical-inference
+value: 100000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Production GPU inference workloads that should win during contention."
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: gpu-training
+value: 50000
+globalDefault: false
+preemptionPolicy: PreemptLowerPriority
+description: "Model training jobs with normal GPU priority."
+---
+apiVersion: scheduling.k8s.io/v1
+kind: PriorityClass
+metadata:
+  name: gpu-batch-low
+value: 10000
+globalDefault: false
+preemptionPolicy: Never
+description: "Low-priority experiments and batch jobs."
+

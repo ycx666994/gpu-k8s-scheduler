@@ -1,0 +1,22 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: gpu-scheduling-cost-rules
+  namespace: monitoring
+spec:
+  groups:
+    - name: gpu.cost.rules
+      rules:
+        - record: namespace:gpu_allocated:sum
+          expr: sum by (namespace) (kube_pod_container_resource_requests{resource="nvidia_com_gpu"})
+        - record: namespace:gpu_utilization:avg
+          expr: avg by (namespace) (DCGM_FI_DEV_GPU_UTIL)
+        - alert: GPUAllocatedButIdle
+          expr: namespace:gpu_allocated:sum > 0 and namespace:gpu_utilization:avg < 15
+          for: 30m
+          labels:
+            severity: warning
+          annotations:
+            summary: "GPU allocation is idle for namespace {{ $labels.namespace }}"
+            description: "Allocated GPU utilization has stayed below 15 percent for 30 minutes."
+

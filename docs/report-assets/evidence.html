@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>GPU Scheduling Evidence</title>
+    <style>
+      :root {
+        --bg: #f6f7f9;
+        --panel: #ffffff;
+        --ink: #17202a;
+        --muted: #657286;
+        --line: #d9dee7;
+        --blue: #2f6fbd;
+        --red: #be4b49;
+        --green: #16856a;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Segoe UI", Arial, sans-serif;
+      }
+
+      main {
+        width: min(1120px, calc(100% - 48px));
+        margin: 0 auto;
+        padding: 34px 0;
+      }
+
+      h1 {
+        margin: 0 0 8px;
+        font-size: 36px;
+        letter-spacing: 0;
+      }
+
+      .subtitle {
+        margin: 0 0 24px;
+        color: var(--muted);
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+        margin-bottom: 14px;
+      }
+
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        padding: 18px;
+      }
+
+      .card span {
+        display: block;
+        color: var(--muted);
+        font-size: 14px;
+        margin-bottom: 8px;
+      }
+
+      .card strong {
+        display: block;
+        font-size: 30px;
+      }
+
+      .wide {
+        grid-column: 1 / -1;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+
+      th,
+      td {
+        text-align: left;
+        border-bottom: 1px solid var(--line);
+        padding: 10px 8px;
+        vertical-align: top;
+      }
+
+      th {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      code {
+        background: #eef2f7;
+        border-radius: 6px;
+        padding: 2px 6px;
+      }
+
+      .bad {
+        color: var(--red);
+        font-weight: 700;
+      }
+
+      .ok {
+        color: var(--green);
+        font-weight: 700;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>GPU Scheduling Evidence</h1>
+      <p class="subtitle">Exported from kind cluster state and Kubernetes events.</p>
+
+      <section class="grid">
+        <article class="card">
+          <span>GPU Requested / Quota</span>
+          <strong id="gpu">-</strong>
+        </article>
+        <article class="card">
+          <span>Pending Pods</span>
+          <strong id="pending">-</strong>
+        </article>
+        <article class="card">
+          <span>Estimated Idle Cost / Hour</span>
+          <strong id="cost">-</strong>
+        </article>
+      </section>
+
+      <section class="grid">
+        <article class="card wide">
+          <h2>Namespace Quota Usage</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Namespace</th>
+                <th>GPU</th>
+                <th>Pending Pods</th>
+                <th>CPU</th>
+                <th>Memory Gi</th>
+              </tr>
+            </thead>
+            <tbody id="teams"></tbody>
+          </table>
+        </article>
+
+        <article class="card wide">
+          <h2>Control-Point Evidence</h2>
+          <table>
+            <thead>
+              <tr>
+                <th>Reason</th>
+                <th>Object</th>
+                <th>Message</th>
+              </tr>
+            </thead>
+            <tbody id="events"></tbody>
+          </table>
+        </article>
+      </section>
+    </main>
+
+    <script src="../../web/data/cluster-status.js"></script>
+    <script>
+      const status = window.CLUSTER_STATUS;
+      document.querySelector("#gpu").textContent = `${status.summary.gpuRequested}/${status.summary.gpuQuota}`;
+      document.querySelector("#pending").textContent = status.summary.pendingPods;
+      document.querySelector("#cost").textContent = `$${status.summary.estimatedIdleCostPerHour.toFixed(2)}`;
+
+      document.querySelector("#teams").innerHTML = status.teams.map((team) => `
+        <tr>
+          <td><code>${team.namespace}</code></td>
+          <td>${team.gpuRequested}/${team.gpuQuota}</td>
+          <td>${team.pendingPods}</td>
+          <td>${team.cpuRequested}/${team.cpuQuota}</td>
+          <td>${team.memoryRequestedGi}/${team.memoryQuotaGi}</td>
+        </tr>
+      `).join("");
+
+      document.querySelector("#events").innerHTML = status.events.slice(0, 8).map((event) => `
+        <tr>
+          <td class="${event.reason === "FailedCreate" ? "bad" : "ok"}">${event.reason}</td>
+          <td><code>${event.namespace} ${event.object}</code></td>
+          <td>${event.message}</td>
+        </tr>
+      `).join("");
+    </script>
+  </body>
+</html>
+

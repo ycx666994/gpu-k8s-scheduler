@@ -1,0 +1,96 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: llama-training-demo
+  namespace: ai-training
+  labels:
+    app: llama-training-demo
+    workload-type: training
+spec:
+  template:
+    metadata:
+      labels:
+        app: llama-training-demo
+        workload-type: training
+    spec:
+      restartPolicy: Never
+      priorityClassName: gpu-training
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: accelerator
+                    operator: In
+                    values:
+                      - nvidia-a100
+                      - nvidia-h100
+                  - key: gpu.platform/pool
+                    operator: In
+                    values:
+                      - training
+      containers:
+        - name: train
+          image: nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.5.0
+          resources:
+            requests:
+              cpu: "4"
+              memory: 16Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "8"
+              memory: 32Gi
+              nvidia.com/gpu: "1"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: realtime-inference-demo
+  namespace: ai-inference
+  labels:
+    app: realtime-inference-demo
+    workload-type: inference
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: realtime-inference-demo
+  template:
+    metadata:
+      labels:
+        app: realtime-inference-demo
+        workload-type: inference
+    spec:
+      priorityClassName: gpu-critical-inference
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: gpu.platform/pool
+                    operator: In
+                    values:
+                      - inference
+                  - key: topology.kubernetes.io/zone
+                    operator: Exists
+      containers:
+        - name: infer
+          image: nvcr.io/nvidia/k8s/cuda-sample:vectoradd-cuda12.5.0
+          resources:
+            requests:
+              cpu: "2"
+              memory: 8Gi
+              nvidia.com/gpu: "1"
+            limits:
+              cpu: "4"
+              memory: 16Gi
+              nvidia.com/gpu: "1"
+

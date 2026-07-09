@@ -1,0 +1,28 @@
+# OS and editor files
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+
+# Node and package manager artifacts
+node_modules/
+dist/
+build/
+.cache/
+
+# Local Kubernetes and environment files
+.kube/
+.env
+.env.*
+
+# Generated archives
+*.zip
+*.tar
+*.tar.gz
+

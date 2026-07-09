@@ -1,0 +1,60 @@
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: research-gpu-quota
+  namespace: ai-research
+spec:
+  hard:
+    requests.cpu: "16"
+    requests.memory: 64Gi
+    limits.cpu: "32"
+    limits.memory: 128Gi
+    requests.nvidia.com/gpu: "2"
+    limits.nvidia.com/gpu: "2"
+    pods: "20"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: training-gpu-quota
+  namespace: ai-training
+spec:
+  hard:
+    requests.cpu: "64"
+    requests.memory: 256Gi
+    limits.cpu: "96"
+    limits.memory: 384Gi
+    requests.nvidia.com/gpu: "6"
+    limits.nvidia.com/gpu: "6"
+    pods: "30"
+---
+apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: inference-gpu-quota
+  namespace: ai-inference
+spec:
+  hard:
+    requests.cpu: "32"
+    requests.memory: 128Gi
+    limits.cpu: "64"
+    limits.memory: 192Gi
+    requests.nvidia.com/gpu: "4"
+    limits.nvidia.com/gpu: "4"
+    pods: "40"
+---
+apiVersion: v1
+kind: LimitRange
+metadata:
+  name: gpu-default-limits
+  namespace: ai-training
+spec:
+  limits:
+    - type: Container
+      default:
+        cpu: "4"
+        memory: 16Gi
+      defaultRequest:
+        cpu: "2"
+        memory: 8Gi
+

@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-research
+  labels:
+    gpu.platform/team: research
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-training
+  labels:
+    gpu.platform/team: training
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ai-inference
+  labels:
+    gpu.platform/team: inference
+

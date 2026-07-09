@@ -1,0 +1,3 @@
+# Deprecated combined manifest.
+# Use 00-namespaces.yaml before 10-quotas-limits.yaml so server-side dry-run and
+# first-time cluster setup can validate namespace-scoped objects correctly.
