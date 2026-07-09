@@ -143,8 +143,9 @@ $clusterStatus = [pscustomobject]@{
 }
 
 $json = $clusterStatus | ConvertTo-Json -Depth 8
-Set-Content -Path $jsonPath -Value $json -Encoding UTF8
-Set-Content -Path $jsPath -Value "window.CLUSTER_STATUS = $json;" -Encoding UTF8
+$utf8NoBom = New-Object System.Text.UTF8Encoding($false)
+[System.IO.File]::WriteAllText($jsonPath, $json, $utf8NoBom)
+[System.IO.File]::WriteAllText($jsPath, "window.CLUSTER_STATUS = $json;", $utf8NoBom)
 
 Write-Host "Wrote $jsonPath"
 Write-Host "Wrote $jsPath"
